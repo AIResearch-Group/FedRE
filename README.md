@@ -1,6 +1,6 @@
 # FedRE
 
-This is the official implementation of FedRE: Federated Learning via Representation Entanglement
+This is the official implementation of FedRE: Model-Heterogeneous Federated Learning via Representation Entanglement
  
 ## Requirements
 
