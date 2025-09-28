@@ -84,4 +84,14 @@ Run the following command:
 python main.py -data TinyImagenet -algo FedRE -gr 100 -lr 0.06 -lbs 64
 ```
 
+### Contact
+
+If you have any problem with our code or have some suggestions, including the future feature, feel free to contact
+
+Jiaqi Wu (1134608851@qq.com)
+
+Yuan Yao (yaoyuan.hitsz@gmail.com)
+
+or describe it in Issues.
+
 ---
