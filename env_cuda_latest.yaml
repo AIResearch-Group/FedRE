@@ -1,4 +1,4 @@
-name: pfllib
+name: FedRE
 channels:
   - pytorch
   - nvidia
