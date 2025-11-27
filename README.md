@@ -6,13 +6,9 @@ This is the official implementation of FedRE: A Representation Entanglement Fram
 
 To run this project, make sure you have the following Python packages installed:
 
-- `ujson`
-- `scikit-learn`
-- `h5py`
-- `click`
-- `calmsize`
-- `opacus`
-- `cvxpy`
+```bash
+conda env create -f env_cuda_latest.yaml  # Downgrade torch via pip if needed to match the CUDA version
+```
 
 ## Data Preparation
 
