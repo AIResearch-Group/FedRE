@@ -1,6 +1,8 @@
 # FedRE
 
 This is the official implementation of **FedRE: A Representation Entanglement Framework for Model-Heterogeneous Federated Learning**, accepted to CVPR 2026.
+
+Paper is now available online: https://arxiv.org/pdf/2511.22265
  
 ## Requirements
 
