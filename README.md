@@ -82,7 +82,20 @@ Run the following command:
 python main.py -data TinyImagenet -algo FedRE -gr 100 -lr 0.06 -lbs 64
 ```
 
-### Contact
+## Citation
+
+If you find this work helpful, please consider citing:
+```
+@inproceedings{yao2026fedre,
+  title     = {FedRE: A Representation Entanglement Framework for Model-Heterogeneous Federated Learning},
+  author    = {Yao, Yuan and Wang, Lixu and Wu, Jiaqi and Song, Jin and Chen, Simin and Wang, Zehua and Tian, Zijian and Chen, Wei and Li, Huixia and Li, Xiaoxiao},
+  booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+  pages     = {39466--39475},
+  year      = {2026}
+}
+```
+
+## Contact
 
 If you have any problem with our code or have some suggestions, including the future feature, feel free to contact
 
