@@ -43,6 +43,8 @@ class FedRE(Server):
             if i%self.eval_gap == 0:
                 print(f"\n-------------Round number: {i}-------------")
                 print("\nEvaluate personalized models")
+                self.evaluate()  # Perform Evaluation
+                
             for client in self.selected_clients:
                     client.train()
             
@@ -54,6 +56,8 @@ class FedRE(Server):
         print(max(self.rs_test_acc))
         print("\nAverage time cost per round.")
         print(sum(self.Budget[1:])/len(self.Budget[1:]))
+
+        self.save_results()  # Save Results
 
     def receive_entangle_rep(self):
         assert (len(self.selected_clients) > 0)
