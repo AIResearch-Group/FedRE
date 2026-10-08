@@ -43,7 +43,7 @@ class FedRE(Server):
             if i%self.eval_gap == 0:
                 print(f"\n-------------Round number: {i}-------------")
                 print("\nEvaluate personalized models")
-                self.evaluate()  # Perform Evaluation
+                self.evaluate()  # Perform evaluation
 
             for client in self.selected_clients:
                     client.train()
@@ -58,7 +58,7 @@ class FedRE(Server):
         print("\nAverage time cost per round.")
         print(sum(self.Budget[1:])/len(self.Budget[1:]))
 
-        self.save_results()  # Save Results
+        self.save_results()  # Save results
 
 
     def send_models(self):
