@@ -39,11 +39,12 @@ class FedRE(Server):
         for i in range(self.global_rounds+1):
             s_t = time.time()
             self.selected_clients = self.select_clients()
+            self.send_parameters()  # Send global classifier to clients
             
             if i%self.eval_gap == 0:
                 print(f"\n-------------Round number: {i}-------------")
                 print("\nEvaluate personalized models")
-                self.evaluate()  # Perform Evaluation
+                self.evaluate()  # Perform evaluation
                 
             for client in self.selected_clients:
                     client.train()
@@ -57,7 +58,7 @@ class FedRE(Server):
         print("\nAverage time cost per round.")
         print(sum(self.Budget[1:])/len(self.Budget[1:]))
 
-        self.save_results()  # Save Results
+        self.save_results()  # Save results
 
     def receive_entangle_rep(self):
         assert (len(self.selected_clients) > 0)
