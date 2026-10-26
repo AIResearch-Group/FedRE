@@ -56,13 +56,11 @@ After preparing data in `HtFLlib/dataset`, enter `HtFLlib/system`:
 ```bash
 cd ../system
 python main.py -data Cifar10 -nb 10 -algo FedRE -m HtM10 -gr 100 -lr 0.06 -lbs 32 -hbs 10 -slr 0.01
-python main.py -data Cifar100 -nb 100 -algo FedRE -m HtM10 -gr 100 -lr 0.06 -lbs 32 -hbs 10 -slr 0.01
-python main.py -data TinyImagenet -nb 200 -algo FedRE -m HtM10 -gr 100 -lr 0.06 -lbs 64 -hbs 10 -slr 0.01
 ```
 
 CNN flatten dimensions and ViT image sizes are selected from the dataset name; no source edits are needed when switching between these datasets. Keep `-nb` consistent with the dataset.
 
-The commands above retain the paper's local learning rate. Earlier miniature tests with `-lr 0.06` produced nonfinite losses, including the original-broadcast CIFAR-10 baseline. Bounded correctness tests use an explicit `-lr 0.001`; they do not validate convergence or paper accuracy. With the class-dependent ViT width, all ten models completed two-round GPU smoke tests on CIFAR-10, CIFAR-100, and TinyImageNet, using 640 training and 160 held-out images per dataset, with finite training losses and evaluation values.
+The command above retains the paper's local learning rate. Earlier miniature tests with `-lr 0.06` produced nonfinite losses, including the original-broadcast CIFAR-10 baseline. Bounded correctness tests use an explicit `-lr 0.001`; they do not validate convergence or paper accuracy. With the class-dependent ViT width, all ten models completed two-round GPU smoke tests on CIFAR-10, CIFAR-100, and TinyImageNet, using 640 training and 160 held-out images per dataset, with finite training losses and evaluation values.
 
 ## Model-Homogeneous Experiments
 
