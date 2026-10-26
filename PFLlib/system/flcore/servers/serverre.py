@@ -28,8 +28,8 @@ class FedRE(Server):
         self.Budget = []
         self.CEloss = nn.CrossEntropyLoss()
         self.head_batch_size=args.head_batch_size
-        self.head = self.clients[0].model.head
-        self.opt_h = torch.optim.SGD(self.head.parameters(), lr=0.001)
+        self.head = copy.deepcopy(self.clients[0].model.head)
+        self.opt_h = torch.optim.SGD(self.head.parameters(), lr=args.server_learning_rate)
         self.scheduler_h = StepLR(self.opt_h, step_size=50, gamma=0.5)
         self.algorithm = args.algorithm
         self.global_rounds = args.global_rounds

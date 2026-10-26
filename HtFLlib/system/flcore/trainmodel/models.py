@@ -40,12 +40,12 @@ class BaseHeadSplit(nn.Module):
             self.head = eval(args.heads[cid % len(args.heads)])
         elif 'vit' in args.models[cid % len(args.models)]:
             self.head = nn.Sequential(
-                nn.Linear(args.feature_dim, 10), 
+                nn.Linear(args.feature_dim, args.num_classes),
                 nn.Tanh(),
-                nn.Linear(10, args.num_classes)
+                nn.Linear(args.num_classes, args.num_classes)
             )
         else:
-            self.head = nn.Linear(512, args.num_classes)
+            self.head = nn.Linear(args.feature_dim, args.num_classes)
         
     def forward(self, x):
         out = self.base(x)

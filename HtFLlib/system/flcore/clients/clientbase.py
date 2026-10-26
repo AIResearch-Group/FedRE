@@ -118,7 +118,8 @@ def save_item(item, role, item_name, item_path=None):
 
 def load_item(role, item_name, item_path=None):
     try:
-        return torch.load(os.path.join(item_path, role + "_" + item_name + ".pt"))
+        # This framework reloads complete modules saved by the local training run.
+        return torch.load(os.path.join(item_path, role + "_" + item_name + ".pt"), weights_only=False)
     except FileNotFoundError:
         print(role, item_name, 'Not Found')
         return None

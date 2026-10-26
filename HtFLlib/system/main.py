@@ -14,6 +14,13 @@ logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
 warnings.simplefilter("ignore")
 
+def str_to_bool(value):
+    if value.lower() in ('true', '1'):
+        return True
+    if value.lower() in ('false', '0'):
+        return False
+    raise argparse.ArgumentTypeError('Use True or False.')
+
 def set_random_seed(seed):
     random.seed(seed)
     np.random.seed(seed)
@@ -43,8 +50,10 @@ def run(args):
 
         # Generate args.models
         if args.model_family == "HtM10":
+            image_size = 64 if args.dataset == "TinyImagenet" else 32
+            cnn_dim = 10816 if image_size == 64 else 1600
             args.models = [
-                'FedAvgCNN(in_features=3, num_classes=args.num_classes, dim=1600)', 
+                f'FedAvgCNN(in_features=3, num_classes=args.num_classes, dim={cnn_dim})',
                 'torchvision.models.googlenet(pretrained=False, aux_logits=False, num_classes=args.num_classes)', 
                 'mobilenet_v2(pretrained=False, num_classes=args.num_classes)', 
                 'torchvision.models.resnet18(pretrained=False, num_classes=args.num_classes)', 
@@ -52,8 +61,8 @@ def run(args):
                 'torchvision.models.resnet50(pretrained=False, num_classes=args.num_classes)', 
                 'torchvision.models.resnet101(pretrained=False, num_classes=args.num_classes)', 
                 'torchvision.models.resnet152(pretrained=False, num_classes=args.num_classes)', 
-                'torchvision.models.vit_b_16(image_size=32, num_classes=args.num_classes)', 
-                'torchvision.models.vit_b_32(image_size=32, num_classes=args.num_classes)'
+                f'torchvision.models.vit_b_16(image_size={image_size}, num_classes=args.num_classes)',
+                f'torchvision.models.vit_b_32(image_size={image_size}, num_classes=args.num_classes)'
             ]
         else:
             raise NotImplementedError
@@ -88,7 +97,7 @@ if __name__ == "__main__":
     parser.add_argument('-lbs', "--batch_size", type=int, default=64)
     parser.add_argument('-lr', "--local_learning_rate", type=float, default=0.03,
                         help="Local learning rate")
-    parser.add_argument('-ld', "--learning_rate_decay", type=bool, default=False)
+    parser.add_argument('-ld', "--learning_rate_decay", type=str_to_bool, default=False)
     parser.add_argument('-ldg', "--learning_rate_decay_gamma", type=float, default=0.99)
     parser.add_argument('-gr', "--global_rounds", type=int, default=100)
     parser.add_argument('-ls', "--local_epochs", type=int, default=1, 
@@ -96,7 +105,7 @@ if __name__ == "__main__":
     parser.add_argument('-algo', "--algorithm", type=str, default="FedRE")
     parser.add_argument('-jr', "--join_ratio", type=float, default=1.0,
                         help="Ratio of clients per round")
-    parser.add_argument('-rjr', "--random_join_ratio", type=bool, default=False,
+    parser.add_argument('-rjr', "--random_join_ratio", type=str_to_bool, default=False,
                         help="Random ratio of clients per round")
     parser.add_argument('-nc', "--num_clients", type=int, default=10,
                         help="Total number of clients")
@@ -107,7 +116,7 @@ if __name__ == "__main__":
     parser.add_argument('-eg', "--eval_gap", type=int, default=1,
                         help="Rounds gap for evaluation")
     parser.add_argument('-sfn', "--save_folder_name", type=str, default='temp')
-    parser.add_argument('-ab', "--auto_break", type=bool, default=False)
+    parser.add_argument('-ab', "--auto_break", type=str_to_bool, default=False)
     parser.add_argument('-fd', "--feature_dim", type=int, default=512)
     parser.add_argument('-vs', "--vocab_size", type=int, default=98635)
     parser.add_argument('-ml', "--max_len", type=int, default=200)
@@ -118,7 +127,7 @@ if __name__ == "__main__":
                         help="The rate for slow clients when training locally")
     parser.add_argument('-ssr', "--send_slow_rate", type=float, default=0.0,
                         help="The rate for slow clients when sending global model")
-    parser.add_argument('-ts', "--time_select", type=bool, default=False,
+    parser.add_argument('-ts', "--time_select", type=str_to_bool, default=False,
                         help="Whether to group and select clients at each round according to time cost")
     parser.add_argument('-tth', "--time_threthold", type=float, default=10000,
                         help="The threthold for droping slow clients")

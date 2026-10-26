@@ -6,81 +6,97 @@ Paper is now available online: https://arxiv.org/pdf/2511.22265
  
 ## Requirements
 
-To run this project, make sure you have the following Python packages installed:
+Create and activate the environment from the repository root:
 
 ```bash
-conda env create -f env_cuda_latest.yaml  # Downgrade torch via pip if needed to match the CUDA version
+conda env create -f env_cuda_latest.yaml
+conda activate FedRE
 ```
+
+Use matching PyTorch and torchvision builds for your CUDA version. CPU execution is available with `-dev cpu`.
+
+The original environment recipe above has not been rebuilt in this revision. GPU smoke tests used Python 3.12.3, PyTorch 2.8.0+cu128, torchvision 0.23.0+cu128, NumPy 1.26.4, SciPy 1.16.3, scikit-learn 1.9.1, and h5py 3.16.0.
+
+## Implementations
+
+- `HtFLlib`: model-heterogeneous FedRE with `HtM10` (CNN, GoogLeNet, MobileNetV2, five ResNets, and two ViTs).
+- `PFLlib`: model-homogeneous FedRE with `-m cnn` or `-m resnet18`.
+
+All HtM10 models map their representations to `feature_dim` (512 by default). Ordinary models use a linear classifier; ViTs retain two linear layers with Tanh and use num_classes as the intermediate width. Input sizes are 32x32 for CIFAR-10/100 and 64x64 for TinyImageNet.
+
+The server retains one linear classifier, `feature_dim -> num_classes`. ViT heads are initialized as `feature_dim -> num_classes -> num_classes` with Tanh between the layers. This makes the second layer accept the first layer's output after the original FedGH parameter broadcast. The existing broadcast copies the server classifier into the ViT's first linear layer; the second layer remains local and is updated during local training. It does not synchronize the entire two-layer ViT classifier. No server-head grouping is used.
 
 ## Data Preparation
 
-1. Navigate to the `dataset` directory:
-
-   ```bash
-   cd ./dataset
-   ```
-
-2. **Dirichlet Distribution:**
-
-   To generate data with a Dirichlet distribution:
-
-   ```bash
-   python generate_Cifar10.py noniid - dir
-   ```
-
-3. **Pathological Distribution:**
-
-   To generate data with a Pathological distribution:
-
-   ```bash
-   python generate_Cifar10.py noniid - pat
-   ```
-
-## Running the Experiments
-
-For detailed parameter settings, please refer to Appendix C of the paper. The parameter configurations can be adjusted for different practical applications. Below are some specific examples.
-
-### 1. Train FedRE on Cifar10
-
-To train the FedRE model on the MNIST dataset with the following settings:
-- Global rounds: 100
-- Local learning rate: 0.06
-- Batch size: 32
-- Model heterogeneity setting
-
-Run the following command:
+Generate data inside the implementation you intend to run. For heterogeneous experiments, start from the repository root:
 
 ```bash
-python main.py -data Cifar10 -algo FedRE -gr 100 -lr 0.06 -lbs 32
+cd HtFLlib/dataset
+python generate_cifar10.py noniid - dir
+python generate_cifar100.py noniid - dir
+python generate_TinyImagenet.py noniid - dir
 ```
 
-### 2. Train FedRE on Cifar100
-
-To train the FedRE model on the Cifar100 dataset with the following settings:
-- Global rounds: 100
-- Local learning rate: 0.06
-- Batch size: 32
-- Model heterogeneity setting
-
-Run the following command:
+For homogeneous experiments, use `PFLlib/dataset` instead. Replace the final `dir` argument with `pat` for the pathological partition:
 
 ```bash
-python main.py -data Cifar100 -algo FedRE -gr 100 -lr 0.06 -lbs 32
+python generate_cifar10.py noniid - pat
 ```
 
-### 3. Train FedRE on TinyImagenet
+Both partition commands write into the same dataset directory, so keep separate copies if you need both partitions. The scripts use 10 clients and a 3:1 local train/test split. Dirichlet alpha is 0.1. Pathological partitions assign 2, 10, or 20 classes per client for CIFAR-10, CIFAR-100, or TinyImageNet, respectively.
 
-To train the FedRE model on the TinyImagenet dataset with the following settings:
-- Global rounds: 100
-- Local learning rate: 0.06
-- Batch size: 64
-- Model heterogeneity setting
+HtFLlib's [dataset instructions](https://github.com/TsingZ0/HtFLlib#scenarios-and-datasets) refer to PFLlib for dataset preparation. TinyImageNet follows that [upstream generator](https://github.com/TsingZ0/PFLlib/blob/master/dataset/generate_TinyImagenet.py): use the official **training images only** (100,000 images, 200 classes, 500 images per class), then create client train/test splits. The official validation directory is not merged into this pool. FedRE's existing client count and random seed are retained.
 
-Run the following command:
+**Existing TinyImageNet shards must be regenerated after this fix.** Older generators incorrectly treated all validation images as class 0. Move the old `TinyImagenet` directory aside before regenerating; raw images can be reused in the new `TinyImagenet/rawdata` directory. A matching old `config.json` causes the generator to skip generation, so rerunning on the old directory does not repair its labels.
+
+## Model-Heterogeneous Experiments
+
+After preparing data in `HtFLlib/dataset`, enter `HtFLlib/system`:
 
 ```bash
-python main.py -data TinyImagenet -algo FedRE -gr 100 -lr 0.06 -lbs 64
+cd ../system
+python main.py -data Cifar10 -nb 10 -algo FedRE -m HtM10 -gr 100 -lr 0.06 -lbs 32 -hbs 10 -slr 0.01
+python main.py -data Cifar100 -nb 100 -algo FedRE -m HtM10 -gr 100 -lr 0.06 -lbs 32 -hbs 10 -slr 0.01
+python main.py -data TinyImagenet -nb 200 -algo FedRE -m HtM10 -gr 100 -lr 0.06 -lbs 64 -hbs 10 -slr 0.01
 ```
+
+CNN flatten dimensions and ViT image sizes are selected from the dataset name; no source edits are needed when switching between these datasets. Keep `-nb` consistent with the dataset.
+
+The commands above retain the paper's local learning rate. Earlier miniature tests with `-lr 0.06` produced nonfinite losses, including the original-broadcast CIFAR-10 baseline. Bounded correctness tests use an explicit `-lr 0.001`; they do not validate convergence or paper accuracy. With the class-dependent ViT width, all ten models completed two-round GPU smoke tests on CIFAR-10, CIFAR-100, and TinyImageNet, using 640 training and 160 held-out images per dataset, with finite training losses and evaluation values.
+
+## Model-Homogeneous Experiments
+
+Prepare data in `PFLlib/dataset`, then enter `PFLlib/system`:
+
+```bash
+cd ../system
+python main.py -data Cifar10 -nb 10 -algo FedRE -m cnn -gr 100 -lr 0.007 -lbs 32 -sbs 10 -slr 0.01
+python main.py -data Cifar100 -nb 100 -algo FedRE -m cnn -gr 100 -lr 0.01 -lbs 32 -sbs 10 -slr 0.01
+python main.py -data TinyImagenet -nb 200 -algo FedRE -m resnet18 -gr 100 -lr 0.01 -lbs 64 -sbs 10 -slr 0.01
+```
+
+These settings follow the paper's detailed experimental setup. For homogeneous CIFAR-10 with the pathological partition, use local learning rate `0.008` instead of `0.007`. The server learning rate is controlled by `-slr`; the head batch-size flags are `-hbs` in HtFLlib and `-sbs` in PFLlib.
+
+PFLlib supports optional exponential learning-rate decay, for example `-ld True -ldg 0.99`; use `-ld False` for a fixed rate. HtFLlib uses a fixed local learning rate. Boolean options accept `True`/`False` and `1`/`0`.
+
+The existing round numbering and evaluation schedule are retained. Framework options for early stopping, client dropout, and time-based filtering are not implemented by this FedRE training loop.
+
+## Local Regression Tests
+
+Run from the repository root in an environment with the dependencies installed:
+
+```bash
+python tests/test_regressions.py --library HtFLlib --suite models
+python tests/test_regressions.py --library PFLlib --suite models
+python tests/test_regressions.py --library PFLlib --suite state
+python tests/test_regressions.py --library HtFLlib --suite state
+python tests/test_regressions.py --library HtFLlib --suite data
+python tests/test_regressions.py --library PFLlib --suite data
+python tests/test_regressions.py --library HtFLlib --suite cli
+python tests/test_regressions.py --library PFLlib --suite cli
+```
+
+The model tests use actual CNN/ResNet passes, full ViT configurations on the meta device for shape checks, and smaller ViTs for two-layer classifier/backpropagation checks. The heterogeneous state test verifies that the original broadcast updates the ViT first layer, leaves the local second layer unchanged during broadcast, and permits forward/backward training for 10/100/200 classes. These tests do not reproduce the paper's accuracy results.
 
 ## Citation
 
