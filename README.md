@@ -79,23 +79,6 @@ PFLlib supports optional exponential learning-rate decay, for example `-ld True 
 
 The existing round numbering and evaluation schedule are retained. Framework options for early stopping, client dropout, and time-based filtering are not implemented by this FedRE training loop.
 
-## Local Regression Tests
-
-Run from the repository root in an environment with the dependencies installed:
-
-```bash
-python tests/test_regressions.py --library HtFLlib --suite models
-python tests/test_regressions.py --library PFLlib --suite models
-python tests/test_regressions.py --library PFLlib --suite state
-python tests/test_regressions.py --library HtFLlib --suite state
-python tests/test_regressions.py --library HtFLlib --suite data
-python tests/test_regressions.py --library PFLlib --suite data
-python tests/test_regressions.py --library HtFLlib --suite cli
-python tests/test_regressions.py --library PFLlib --suite cli
-```
-
-The model tests use actual CNN/ResNet passes, full ViT configurations on the meta device for shape checks, and smaller ViTs for two-layer classifier/backpropagation checks. The heterogeneous state test verifies that the original broadcast updates the ViT first layer, leaves the local second layer unchanged during broadcast, and permits forward/backward training for 10/100/200 classes. These tests do not reproduce the paper's accuracy results.
-
 ## Citation
 
 If you find this work helpful, please consider citing:
